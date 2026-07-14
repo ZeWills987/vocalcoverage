@@ -22,8 +22,8 @@ def _build_parser() -> argparse.ArgumentParser:
     analyze_parser.add_argument("--f0-min", type=float, default=80.0)
     analyze_parser.add_argument("--f0-max", type=float, default=1000.0)
     analyze_parser.add_argument("--silence-threshold-db", type=float, default=-40.0)
-    analyze_parser.add_argument("--ratio-threshold", type=float, default=0.3)
-    analyze_parser.add_argument("--f0-confidence-threshold", type=float, default=0.5)
+    analyze_parser.add_argument("--ratio-threshold", type=float, default=0.1)
+    analyze_parser.add_argument("--f0-confidence-threshold", type=float, default=0.2)
     analyze_parser.add_argument("--smoothing-window", type=int, default=3)
     analyze_parser.add_argument("--json", action="store_true", help="Output raw JSON")
 

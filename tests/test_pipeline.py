@@ -14,7 +14,7 @@ from vocalcoverage.pipeline import (
     load_aligned,
     smooth_frames,
 )
-from conftest import SR, sine_wave, silence, white_noise
+from conftest import SR, sine_wave, silence, vibrato_tone, white_noise
 
 
 def test_frame_signal_drops_short_tail():
@@ -65,11 +65,25 @@ def test_is_vocal_frame_true_for_sine():
     assert is_vocal_frame(ratio, f0_result) is True
 
 
+def test_is_vocal_frame_true_for_vibrato_with_default_thresholds():
+    """Real singing has vibrato/micro-variations that lower pyin's voicing
+    confidence versus a pure stable tone; the default thresholds must still
+    accept it (regression test for the 0.5 -> 0.2 recalibration)."""
+    frame = vibrato_tone(220.0, 1.0, amplitude=0.8)
+    ratio = 0.9
+    f0_result = frame_f0(frame, SR)
+    assert f0_result["f0_detected"] is True
+    assert is_vocal_frame(ratio, f0_result) is True
+
+
 def test_is_vocal_frame_false_for_white_noise_lead_instrument():
     """High RMS ratio but no stable harmonic structure -> not a vocal frame."""
     frame = white_noise(1.0, amplitude=0.8)
     ratio = 0.9
     f0_result = frame_f0(frame, SR)
+    # Must hold at the recalibrated default f0_confidence_threshold (0.2):
+    # broadband leakage measures ~0.01 confidence, well under the threshold.
+    assert f0_result["confidence"] < 0.2
     assert is_vocal_frame(ratio, f0_result) is False
 
 

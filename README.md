@@ -60,7 +60,8 @@ vocalcoverage analyze mix.wav vocals.wav --frame-duration 0.5
 5. **Harmonic confirmation** — `librosa.pyin` estimates f0 and voicing
    confidence within the vocal range per frame.
 6. **Per-frame decision** — a frame is "vocal" only if both the RMS ratio
-   and the f0 confidence clear their thresholds.
+   and the f0 confidence clear their thresholds (defaults:
+   `ratio_threshold=0.1`, `f0_confidence_threshold=0.2`).
 7. **Temporal smoothing** — a centered majority-vote window removes
    frame-to-frame flicker.
 8. **Segmentation** — consecutive vocal frames are grouped into segments
@@ -73,6 +74,25 @@ All decision thresholds (`ratio_threshold`, `f0_confidence_threshold`,
 `silence_threshold_db`, etc.) are parameters with documented defaults —
 `vocalcoverage` never hardcodes an application-level "coverage < X% means
 instrumental" judgment.
+
+### A note on the default `f0_confidence_threshold` (0.2)
+
+pyin's voicing confidence is structurally lower on real singing than on
+synthetic test tones. A pure, stable sine yields confidence close to 1.0,
+but real voice — with vibrato, micro-variations in pitch, breathiness and
+consonants — spreads pyin's probability mass across neighboring pitch
+candidates, and per-frame confidence commonly lands well below 0.5 even
+when a fundamental is clearly detected in the vocal range. An earlier
+default of 0.5 caused severe under-detection on real a cappella material
+(~18% measured coverage where ~95–100% was expected, despite RMS ratios
+near 1.0 and valid f0 detections).
+
+The recalibrated default of 0.2 restores recall on real voice while
+keeping the lead-instrument guard intact: broadband/inharmonic leakage
+(noise, unpitched synth textures) measures around 0.01 confidence in our
+tests — an order of magnitude below the threshold. If your material is
+mostly clean synthetic vocals you can raise the threshold; if you see
+missed detections on heavily ornamented singing, lower it further.
 
 ## How it works: in-memory decoding
 

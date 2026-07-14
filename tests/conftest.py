@@ -14,6 +14,21 @@ def sine_wave(freq: float, duration: float, sr: int = SR, amplitude: float = 0.5
     return (amplitude * np.sin(2 * np.pi * freq * t)).astype(np.float32)
 
 
+def vibrato_tone(
+    freq: float,
+    duration: float,
+    sr: int = SR,
+    amplitude: float = 0.5,
+    vibrato_rate: float = 5.5,
+    vibrato_depth: float = 0.03,
+) -> np.ndarray:
+    """Sine with slow sinusoidal FM, simulating real singing with vibrato."""
+    t = np.linspace(0, duration, int(sr * duration), endpoint=False)
+    f_inst = freq * (1 + vibrato_depth * np.sin(2 * np.pi * vibrato_rate * t))
+    phase = 2 * np.pi * np.cumsum(f_inst) / sr
+    return (amplitude * np.sin(phase)).astype(np.float32)
+
+
 def white_noise(duration: float, sr: int = SR, amplitude: float = 0.5) -> np.ndarray:
     rng = np.random.default_rng(42)
     return (amplitude * rng.uniform(-1, 1, int(sr * duration))).astype(np.float32)
