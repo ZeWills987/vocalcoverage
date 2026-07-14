@@ -276,6 +276,7 @@ def analyze(
             "ratio": ratios[i],
             "f0_detected": f0_results[i]["f0_detected"],
             "f0_hz": f0_results[i]["f0_hz"],
+            "f0_confidence": f0_results[i]["confidence"],
             "is_vocal_frame": smoothed_flags[i],
         }
         for i in range(n_frames)
