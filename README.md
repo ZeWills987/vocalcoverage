@@ -94,6 +94,22 @@ tests — an order of magnitude below the threshold. If your material is
 mostly clean synthetic vocals you can raise the threshold; if you see
 missed detections on heavily ornamented singing, lower it further.
 
+### Confidence aggregation: percentile, not mean
+
+`frame_f0` summarizes pyin's per-hop voicing probability across a frame
+using the 75th percentile, not the mean. A 1-second singing frame contains
+many pyin sub-hops (attacks, consonants, breaths, brief pauses between
+notes) that are legitimately unvoiced even while the singer is audibly
+present. Averaging those in dilutes the frame's confidence far below what
+a listener would call "clearly sung" — on real a cappella material this
+alone caused adjacent, equally loud, equally pitched frames to swing from
+comfortably passing (mean confidence 0.39) to rejected (mean confidence
+0.16-0.20), purely because one had a slightly longer unvoiced attack.
+The 75th percentile reflects "is there a clearly voiced portion in this
+frame" instead of "is the whole frame voiced," while leaving noise/lead
+instrument leakage untouched — those have no high-confidence sub-hops to
+raise, so percentile and mean agree (~0.01) on non-vocal content.
+
 ## How it works: in-memory decoding
 
 `vocalcoverage` never writes converted audio files — FFmpeg decoding

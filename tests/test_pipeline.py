@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest import mock
+
 import numpy as np
 import pytest
 
@@ -63,6 +65,38 @@ def test_is_vocal_frame_true_for_sine():
     ratio = 0.8
     f0_result = frame_f0(frame, SR)
     assert is_vocal_frame(ratio, f0_result) is True
+
+
+def test_frame_f0_confidence_uses_percentile_not_mean():
+    """Regression test for a real-world under-detection: a singing frame with
+    a normal unvoiced attack/consonant portion was rejected because the mean
+    of pyin's per-hop voicing probability was diluted below threshold, even
+    though a clear majority of hops were confidently voiced.
+
+    This fixes the exact voiced_prob pattern captured from a real a cappella
+    track (t=7.0s in track_avec_voix, UVR-MDX-NET-Inst_HQ_3 stem): mean was
+    0.157 (would fail the default 0.2 threshold) while p75 was 0.261 (passes,
+    matching the audibly sung content in the source frame).
+    """
+    real_voiced_prob = np.array([
+        0.08, 0.09, 0.11, 0.13, 0.11, 0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
+        0.01, 0.02, 0.03, 0.03, 0.08, 0.09, 0.24, 0.37, 0.43, 0.43, 0.55, 0.43,
+        0.21, 0.32, 0.43, 0.48, 0.48, 0.48, 0.32, 0.07, 0.04, 0.15, 0.21, 0.18,
+        0.02, 0.01, 0.01, 0.01, 0.01, 0.01, 0.03, 0.15,
+    ])
+    real_voiced_flag = real_voiced_prob >= 0.5
+    real_f0 = np.where(real_voiced_flag, 254.0, np.nan)
+
+    assert np.nanmean(real_voiced_prob) < 0.2  # the bug: mean rejects this frame
+
+    frame = sine_wave(254.0, 1.0, amplitude=0.5)
+    with mock.patch(
+        "librosa.pyin", return_value=(real_f0, real_voiced_flag, real_voiced_prob)
+    ):
+        result = frame_f0(frame, SR)
+
+    assert result["confidence"] >= 0.2
+    assert is_vocal_frame(ratio=0.466, f0_result=result) is True
 
 
 def test_is_vocal_frame_true_for_vibrato_with_default_thresholds():

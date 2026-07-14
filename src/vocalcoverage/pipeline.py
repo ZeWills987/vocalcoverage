@@ -122,7 +122,13 @@ def frame_f0(
         hop_length=hop_length,
     )
 
-    confidence = float(np.nanmean(voiced_prob)) if voiced_prob.size else 0.0
+    # The 75th percentile (rather than the mean) of pyin's per-hop voicing
+    # probability avoids diluting confidence with the unvoiced sub-hops that
+    # normally occur within a singing frame (note attacks, consonants,
+    # breaths): a mean averages those in, a lead-in silence in an otherwise
+    # clearly sung frame can pull it under threshold, while noise/inharmonic
+    # leakage has no such high-confidence sub-hops to raise the percentile.
+    confidence = float(np.nanpercentile(voiced_prob, 75)) if voiced_prob.size else 0.0
     if np.isnan(confidence):
         confidence = 0.0
 

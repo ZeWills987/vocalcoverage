@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vocalcoverage"
-version = "0.1.1"
+version = "0.1.2"
 description = "Measure vocal presence in a track from a separated vocal stem and its full mix"
 readme = "README.md"
 license = { text = "MIT" }
