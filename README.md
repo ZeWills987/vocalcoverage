@@ -110,6 +110,33 @@ frame" instead of "is the whole frame voiced," while leaving noise/lead
 instrument leakage untouched — those have no high-confidence sub-hops to
 raise, so percentile and mean agree (~0.01) on non-vocal content.
 
+## Using with audiotwin
+
+`vocal_coverage` is exactly the input that
+[audiotwin](https://github.com/ZeWills987/audiotwin)'s
+`classify_instrumental_pair` expects to detect instrumental/karaoke pairs
+(same musical content, vocals present on one side and absent on the other):
+
+```python
+from vocalcoverage import analyze
+from audiotwin import classify_instrumental_pair
+from audiotwin.cover import cover_similarity
+
+# Vocal stems separated upstream (Demucs, audio-separator, ...):
+content = cover_similarity("track_a.mp3", "track_b.mp3")
+
+r = classify_instrumental_pair(
+    content_similarity=content["similarity"],
+    vocal_coverage_a=analyze("track_a.mp3", "a_vocals.wav")["vocal_coverage"],
+    vocal_coverage_b=analyze("track_b.mp3", "b_vocals.wav")["vocal_coverage"],
+)
+print(r["is_instrumental_pair"], r["vocal_track"])
+```
+
+The two libraries share the same philosophy (analysis only, no business
+decisions, thresholds as parameters) and the same division of labor:
+source separation stays upstream, in the tool of your choice.
+
 ## How it works: in-memory decoding
 
 `vocalcoverage` never writes converted audio files — FFmpeg decoding

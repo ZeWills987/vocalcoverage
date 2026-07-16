@@ -37,7 +37,7 @@ dev = [
 vocalcoverage = "vocalcoverage.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/wtchang/vocalcoverage"
+Homepage = "https://github.com/ZeWills987/vocalcoverage"
 
 [tool.setuptools.packages.find]
 where = ["src"]
