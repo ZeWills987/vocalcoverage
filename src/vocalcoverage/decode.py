@@ -11,6 +11,10 @@ import subprocess
 
 import numpy as np
 
+# Safety-net timeout (seconds) for the FFmpeg subprocess — a corrupt file or
+# wedged decoder fails loudly instead of hanging the caller forever.
+FFMPEG_TIMEOUT_SECONDS = 600.0
+
 FFMPEG_NOT_FOUND_MESSAGE = (
     "FFmpeg was not found in the system PATH. vocalcoverage requires FFmpeg "
     "to decode audio files.\n"
@@ -46,7 +50,14 @@ def decode_audio(path: str, sr: int = 22050) -> np.ndarray:
         "-",
     ]
 
-    result = subprocess.run(command, capture_output=True, check=False)
+    try:
+        result = subprocess.run(
+            command, capture_output=True, check=False, timeout=FFMPEG_TIMEOUT_SECONDS
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"FFmpeg timed out after {FFMPEG_TIMEOUT_SECONDS:.0f}s decoding '{path}'"
+        ) from exc
     if result.returncode != 0:
         stderr = result.stderr.decode("utf-8", errors="replace").strip()
         raise RuntimeError(f"FFmpeg failed to decode '{path}': {stderr}")
